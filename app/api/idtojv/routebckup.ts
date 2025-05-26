@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import natural from 'natural';  // Untuk stemming
 
 const prisma = new PrismaClient();
-
-// Fungsi stemming
-const stemmer = natural.PorterStemmer;
 
 interface TranslateRequest {
   sentence: string;
@@ -25,19 +21,23 @@ export async function POST(request: NextRequest) {
     const sentence = body.sentence.trim().toLowerCase();
     const words = sentence.split(/\s+/);
 
-    // Normalisasi dan stemming setiap kata
-    const normalizedWords = words.map(word => {
-      const cleanWord = word.replace(/[,;.!?]/g, '').trim();
-      return stemmer.stem(cleanWord); // Melakukan stemming
-    });
-
     const translatedWords = await Promise.all(
-      normalizedWords.map(async (word) => {
-        // Cari padanan yang cocok
+      words.map(async (word) => {
+        const cleanWord = word.replace(/[,;.!?]/g, '').trim();
+
+        if (!cleanWord) {
+          return {
+            original: word,
+            translated: word,
+            matched: null,
+          };
+        }
+
+        // Cari padanan yang cocok (prioritas exact match, lalu contains)
         let translation = await prisma.kamusJawaIndonesia.findFirst({
           where: {
             Makna_indonesia: {
-              equals: word,
+              equals: cleanWord,
             },
           },
           select: {
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
           translation = await prisma.kamusJawaIndonesia.findFirst({
             where: {
               Makna_indonesia: {
-                contains: word,
+                contains: cleanWord,
               },
             },
             select: {
