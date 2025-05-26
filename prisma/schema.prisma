@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model KamusJawaIndonesia {
+  id              Int     @id @default(autoincrement())
+  jawa            String? @db.VarChar(25)
+  Makna_indonesia String? @db.VarChar(137)
+}
