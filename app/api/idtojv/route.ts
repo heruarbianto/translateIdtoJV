@@ -1,91 +1,39 @@
+// Untuk Next.js App Router (Next 13+)
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import natural from 'natural';  // Untuk stemming
 
-const prisma = new PrismaClient();
+const VALID_PAIRS = {
+  id: ['ng', 'kl', 'ka'],
+  jw: ['id']
+};
 
-// Fungsi stemming
-const stemmer = natural.PorterStemmer;
-
-interface TranslateRequest {
-  sentence: string;
-}
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body: TranslateRequest = await request.json();
+    const body = await req.json();
+    const { text, from, to } = body;
 
-    if (!body.sentence || typeof body.sentence !== 'string') {
-      return NextResponse.json(
-        { error: 'Kalimat yang akan diterjemahkan harus berupa string' },
-        { status: 400 }
-      );
+    // Validasi parameter
+    if (!text || !from || !to) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const sentence = body.sentence.trim().toLowerCase();
-    const words = sentence.split(/\s+/);
+    // Cek apakah kombinasi from-to valid
+    const validTargets = VALID_PAIRS[from as keyof typeof VALID_PAIRS];
+    if (!validTargets || !validTargets.includes(to)) {
+      return NextResponse.json({ error: 'Invalid language pair' }, { status: 400 });
+    }
 
-    // Normalisasi dan stemming setiap kata
-    const normalizedWords = words.map(word => {
-      const cleanWord = word.replace(/[,;.!?]/g, '').trim();
-      return stemmer.stem(cleanWord); // Melakukan stemming
+    // Forward ke API utama
+    const res = await fetch('https://api.translatejawa.id/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, from, to })
     });
 
-    const translatedWords = await Promise.all(
-      normalizedWords.map(async (word) => {
-        // Cari padanan yang cocok
-        let translation = await prisma.kamusJawaIndonesia.findFirst({
-          where: {
-            Makna_indonesia: {
-              equals: word,
-            },
-          },
-          select: {
-            jawa: true,
-            Makna_indonesia: true,
-          },
-        });
+    const data = await res.json();
 
-        // Jika belum ketemu, coba cari yang mengandung kata tsb
-        if (!translation) {
-          translation = await prisma.kamusJawaIndonesia.findFirst({
-            where: {
-              Makna_indonesia: {
-                contains: word,
-              },
-            },
-            select: {
-              jawa: true,
-              Makna_indonesia: true,
-            },
-          });
-        }
-
-        const translatedWord = translation?.jawa
-          ? translation.jawa.replace(/\s*\([^)]*\)/g, '').replace(/[-;]/g, '').trim()
-          : word;
-
-        return {
-          original: word,
-          translated: translatedWord,
-          matched: translation?.Makna_indonesia || null,
-        };
-      })
-    );
-
-    const translatedSentence = translatedWords.map(w => w.translated).join(' ');
-
-    return NextResponse.json({
-      original: sentence,
-      translated: translatedSentence,
-      details: translatedWords,
-    }, { status: 200 });
+    return NextResponse.json(data, { status: res.status });
 
   } catch (error) {
-    console.error('Error during translation:', error);
-    return NextResponse.json(
-      { error: 'Terjadi kesalahan saat menerjemahkan' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
