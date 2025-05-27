@@ -1,11 +1,7 @@
-Berikut adalah contoh `README.md` yang rapi dan profesional untuk GitHub, difokuskan pada bagian "hasil saja" sesuai permintaan Anda:
-
----
-
 # MMC Project - Translator Jawa ↔ Indonesia
 
 Website hasil dapat diakses di: **[mmcproject.web.id](https://mmcproject.web.id)**
-Unduh APK di: **[Kamus Bahasa Jawa](#)**
+Unduh APK di: **[Kamus Bahasa Jawa](https://github.com/heruarbianto/translateIdtoJV/blob/master/kamusIdtoJv.apk)**
 
 ## API Uji Coba Backend
 
@@ -53,7 +49,3 @@ Endpoint API:
   "to": "id"
 }
 ```
-
----
-
-Beri tahu jika Anda ingin menambahkan dokumentasi teknis, contoh kode pemanggilan API, atau penjelasan parameter lebih lanjut.
