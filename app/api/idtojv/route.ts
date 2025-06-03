@@ -1,38 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import  {Stemmer}  from 'sastrawijs';
 
 const VALID_PAIRS = {
   id: ['ng', 'kl', 'ka'],
   jw: ['id']
 };
+const stemmer = new Stemmer();
 
-const isImbuhan = (word: string): boolean => {
-  const prefix = ['me', 'mem', 'men', 'meng', 'di', 'ke', 'ber', 'ter', 'pe', 'se'];
-  const suffix = ['kan', 'an', 'i', 'lah', 'kah', 'nya'];
-  return prefix.some(p => word.startsWith(p)) || suffix.some(s => word.endsWith(s));
-};
+
 
 const stemming = (word: string): string => {
-  // Stemming sangat sederhana (untuk demonstrasi)
-  let result = word;
-  const prefixes = ['memper', 'meng', 'meny', 'men', 'mem', 'me', 'ber', 'ter', 'per', 'di', 'ke', 'se'];
-  const suffixes = ['kan', 'an', 'i', 'lah', 'kah', 'nya'];
-
-  for (const pre of prefixes) {
-    if (result.startsWith(pre)) {
-      result = result.slice(pre.length);
-      break;
-    }
-  }
-
-  for (const suf of suffixes) {
-    if (result.endsWith(suf)) {
-      result = result.slice(0, -suf.length);
-      break;
-    }
-  }
-
-  return result;
-};
+    return stemmer.stem(word);
+  };
 
 const tokenize = (text: string): string[] => {
   return text.trim().toLowerCase().split(/\s+/);
@@ -75,7 +54,6 @@ export async function POST(req: NextRequest) {
         return {
           original: token,
           translate_original,
-          hasAffix: isImbuhan(token),
           stemmed,
           translate_stemmed
         };
