@@ -18,6 +18,11 @@ class TranslateApp extends StatelessWidget {
         fontFamily: 'Arial',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          clipBehavior: Clip.antiAlias,
+        ),
       ),
       home: const TranslateHomePage(),
     );
@@ -35,10 +40,11 @@ class _TranslateHomePageState extends State<TranslateHomePage>
     with SingleTickerProviderStateMixin {
   final TextEditingController _textController = TextEditingController();
   String _translatedText = '';
+  Map<String, dynamic>? _analysis;
   String _fromLang = 'id';
   String _toLang = 'ng';
-  bool _isLoading = false; // Track loading state
-  String? _errorMessage; // Store error message
+  bool _isLoading = false;
+  String? _errorMessage;
 
   final List<String> _fromOptions = ['id', 'jw'];
   final Map<String, List<String>> _toOptions = {
@@ -52,12 +58,10 @@ class _TranslateHomePageState extends State<TranslateHomePage>
   @override
   void initState() {
     super.initState();
-
     _animationController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _fadeAnimation =
-        CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
-
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut);
     _animationController.forward();
   }
 
@@ -67,7 +71,12 @@ class _TranslateHomePageState extends State<TranslateHomePage>
         _errorMessage = 'Masukkan teks untuk diterjemahkan.';
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_errorMessage!)),
+        SnackBar(
+          content: Text(_errorMessage!),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }
@@ -75,6 +84,7 @@ class _TranslateHomePageState extends State<TranslateHomePage>
     setState(() {
       _isLoading = true;
       _translatedText = '';
+      _analysis = null;
       _errorMessage = null;
     });
 
@@ -88,30 +98,44 @@ class _TranslateHomePageState extends State<TranslateHomePage>
           'from': _fromLang,
           'to': _toLang,
         }),
-      ).timeout(const Duration(seconds: 10)); // Add timeout for network issues
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
         setState(() {
           _translatedText = result['result'] ?? 'Tidak ada hasil.';
+          _analysis = result['analysis'];
           _errorMessage = null;
         });
+        _animationController.forward(from: 0);
       } else {
         setState(() {
           _errorMessage = 'Gagal menerjemahkan: Server error (${response.statusCode}).';
           _translatedText = '';
+          _analysis = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_errorMessage!)),
+          SnackBar(
+            content: Text(_errorMessage!),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         );
       }
     } catch (e) {
       setState(() {
         _errorMessage = 'Error: ${e.toString()}';
         _translatedText = '';
+        _analysis = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_errorMessage!)),
+        SnackBar(
+          content: Text(_errorMessage!),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
     } finally {
       setState(() {
@@ -123,12 +147,15 @@ class _TranslateHomePageState extends State<TranslateHomePage>
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final cardWidth = isMobile ? double.infinity : 700.0;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('MMC Translator',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'MMC Translator',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+        ),
         backgroundColor: Colors.indigo.shade600,
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -140,149 +167,291 @@ class _TranslateHomePageState extends State<TranslateHomePage>
           padding: const EdgeInsets.all(16),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 700),
+              constraints: BoxConstraints(maxWidth: cardWidth),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  TextField(
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      hintText: 'Masukkan teks...',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: TextField(
+                        controller: _textController,
+                        decoration: InputDecoration(
+                          hintText: 'Masukkan teks...',
+                          // filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(Icons.translate, color: Colors.indigo),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                        ),
+                        maxLines: null,
                       ),
-                      prefixIcon: const Icon(Icons.translate),
                     ),
-                    maxLines: null,
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _fromLang,
-                          decoration: const InputDecoration(
-                            labelText: 'Dari Bahasa',
-                            border: OutlineInputBorder(),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: DropdownButtonFormField<String>(
+                              value: _fromLang,
+                              decoration: InputDecoration(
+                                labelText: 'Dari Bahasa',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                // filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              items: _fromOptions
+                                  .map((lang) => DropdownMenuItem(
+                                      value: lang,
+                                      child: Text(lang == 'id' ? 'Indonesia' : 'Jawa')))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _fromLang = value!;
+                                  _toLang = _toOptions[_fromLang]!.first;
+                                });
+                              },
+                            ),
                           ),
-                          items: _fromOptions
-                              .map((lang) => DropdownMenuItem(
-                                  value: lang,
-                                  child: Text(lang == 'id'
-                                      ? 'Indonesia'
-                                      : 'Jawa')))
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _fromLang = value!;
-                              _toLang = _toOptions[_fromLang]!.first;
-                            });
-                          },
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: _toLang,
-                          decoration: const InputDecoration(
-                            labelText: 'Ke Bahasa',
-                            border: OutlineInputBorder(),
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: DropdownButtonFormField<String>(
+                              value: _toLang,
+                              decoration: InputDecoration(
+                                labelText: 'Ke Bahasa',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                // filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              items: (_toOptions[_fromLang] ?? [])
+                                  .map((lang) => DropdownMenuItem(
+                                      value: lang,
+                                      child: Text({
+                                        'ng': 'Ngoko',
+                                        'kl': 'Krama Lugu',
+                                        'ka': 'Krama Alus',
+                                        'id': 'Indonesia'
+                                      }[lang]!)))
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _toLang = value!;
+                                });
+                              },
+                            ),
                           ),
-                          items: (_toOptions[_fromLang] ?? [])
-                              .map((lang) => DropdownMenuItem(
-                                  value: lang,
-                                  child: Text({
-                                    'ng': 'Ngoko',
-                                    'kl': 'Krama Lugu',
-                                    'ka': 'Krama Alus',
-                                    'id': 'Indonesia'
-                                  }[lang]!)))
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _toLang = value!;
-                            });
-                          },
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _isLoading ? null : _translate, // Disable button during loading
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo,
-                        foregroundColor: Colors.white,
+                  Card(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: _isLoading ? null : _translate,
+                      child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.send, color: Colors.white),
+                            const SizedBox(width: 8),
+                            Text(
+                              _isLoading ? 'Menerjemahkan...' : 'Terjemahkan',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      icon: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.send),
-                      label: Text(
-                        _isLoading ? 'Menerjemahkan...' : 'Terjemahkan',
-                        style: const TextStyle(fontSize: 16),
-                      ),
                     ),
+                    color: Colors.indigo,
                   ),
                   const SizedBox(height: 30),
                   if (_isLoading)
-                    const CircularProgressIndicator(), // Show loading indicator
+                    const Center(child: CircularProgressIndicator()),
                   if (_translatedText.isNotEmpty && !_isLoading)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.shade50,
-                        borderRadius: BorderRadius.circular(12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Hasil Terjemahan',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _translatedText,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                        _translatedText,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
+                    ),
+                  if (_analysis != null && !_isLoading)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Analisis',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: MediaQuery.of(context).size.height * 0.4, // Limit height to 40% of screen
+                              ),
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Tokens → ${_analysis!['tokens']?.join(', ') ?? 'Tidak ada'}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Stemmed Text → ${_analysis!['stemmed_text'] ?? 'Tidak ada'}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'Word Analysis',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.indigo,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    if (_analysis!['word_analysis'] != null)
+                                      ...(_analysis!['word_analysis'] as List)
+                                          .asMap()
+                                          .entries
+                                          .map((entry) {
+                                        final index = entry.key;
+                                        final word = entry.value;
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 8),
+                                          child: Card(
+                                            color: Colors.indigo.shade50,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(12),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Word ${index + 1}',
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.indigo,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'Original → ${word['original']}',
+                                                    style: const TextStyle(fontSize: 14),
+                                                  ),
+                                                  Text(
+                                                    'Translate Original → ${word['translate_original']}',
+                                                    style: const TextStyle(fontSize: 14),
+                                                  ),
+                                                  Text(
+                                                    'Stemmed → ${word['stemmed']?? 'Tidak ada'}',
+                                                    style: const TextStyle(fontSize: 14),
+                                                  ),
+                                                  Text(
+                                                    'Translate Stemmed → ${word['translate_stemmed']?? 'Tidak ada'}',
+                                                    style: const TextStyle(fontSize: 14),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   if (_errorMessage != null && !_isLoading)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.red,
-                          fontWeight: FontWeight.w500,
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                  const Spacer(),
+                  const SizedBox(height: 30),
                   const Divider(height: 40),
                   const Text(
                     'Kelompok MMC\nAnggota: Julius, Heru, Zani',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontStyle: FontStyle.italic, color: Colors.grey),
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey,
+                    ),
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
