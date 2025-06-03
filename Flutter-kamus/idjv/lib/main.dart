@@ -18,10 +18,10 @@ class TranslateApp extends StatelessWidget {
         fontFamily: 'Arial',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
-        cardTheme: CardThemeData(
+        cardTheme: CardThemeData( // Changed from CardTheme to CardThemeData
           elevation: 2,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: Clip.antiAlias, // Added for smoother card edges
         ),
       ),
       home: const TranslateHomePage(),
@@ -161,298 +161,288 @@ class _TranslateHomePageState extends State<TranslateHomePage>
         centerTitle: true,
         elevation: 4,
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: cardWidth),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: TextField(
-                        controller: _textController,
-                        decoration: InputDecoration(
-                          hintText: 'Masukkan teks...',
-                          // filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          prefixIcon: const Icon(Icons.translate, color: Colors.indigo),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                        ),
-                        maxLines: null,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: DropdownButtonFormField<String>(
-                              value: _fromLang,
-                              decoration: InputDecoration(
-                                labelText: 'Dari Bahasa',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                // filled: true,
-                                fillColor: Colors.white,
-                              ),
-                              items: _fromOptions
-                                  .map((lang) => DropdownMenuItem(
-                                      value: lang,
-                                      child: Text(lang == 'id' ? 'Indonesia' : 'Jawa')))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _fromLang = value!;
-                                  _toLang = _toOptions[_fromLang]!.first;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: DropdownButtonFormField<String>(
-                              value: _toLang,
-                              decoration: InputDecoration(
-                                labelText: 'Ke Bahasa',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                // filled: true,
-                                fillColor: Colors.white,
-                              ),
-                              items: (_toOptions[_fromLang] ?? [])
-                                  .map((lang) => DropdownMenuItem(
-                                      value: lang,
-                                      child: Text({
-                                        'ng': 'Ngoko',
-                                        'kl': 'Krama Lugu',
-                                        'ka': 'Krama Alus',
-                                        'id': 'Indonesia'
-                                      }[lang]!)))
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _toLang = value!;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Card(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: _isLoading ? null : _translate,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.send, color: Colors.white),
-                            const SizedBox(width: 8),
-                            Text(
-                              _isLoading ? 'Menerjemahkan...' : 'Terjemahkan',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    color: Colors.indigo,
-                  ),
-                  const SizedBox(height: 30),
-                  if (_isLoading)
-                    const Center(child: CircularProgressIndicator()),
-                  if (_translatedText.isNotEmpty && !_isLoading)
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(), // Smooth scrolling effect
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: cardWidth),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Hasil Terjemahan',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.indigo,
-                              ),
+                        child: TextField(
+                          controller: _textController,
+                          decoration: InputDecoration(
+                            hintText: 'Masukkan teks...',
+                            // filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _translatedText,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                            prefixIcon: const Icon(Icons.translate, color: Colors.indigo),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                          ),
+                          maxLines: null,
                         ),
                       ),
                     ),
-                  if (_analysis != null && !_isLoading)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Analisis',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.indigo,
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: DropdownButtonFormField<String>(
+                                value: _fromLang,
+                                decoration: InputDecoration(
+                                  labelText: 'Dari Bahasa',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  // filled: true,
+                                  fillColor: Colors.white,
+                                ),
+                                items: _fromOptions
+                                    .map((lang) => DropdownMenuItem(
+                                        value: lang,
+                                        child: Text(lang == 'id' ? 'Indonesia' : 'Jawa')))
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _fromLang = value!;
+                                    _toLang = _toOptions[_fromLang]!.first;
+                                  });
+                                },
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxHeight: MediaQuery.of(context).size.height * 0.4, // Limit height to 40% of screen
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: DropdownButtonFormField<String>(
+                                value: _toLang,
+                                decoration: InputDecoration(
+                                  labelText: 'Ke Bahasa',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  // filled: true,
+                                  fillColor: Colors.white,
+                                ),
+                                items: (_toOptions[_fromLang] ?? [])
+                                    .map((lang) => DropdownMenuItem(
+                                        value: lang,
+                                        child: Text({
+                                          'ng': 'Ngoko',
+                                          'kl': 'Krama Lugu',
+                                          'ka': 'Krama Alus',
+                                          'id': 'Indonesia'
+                                        }[lang]!)))
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _toLang = value!;
+                                  });
+                                },
                               ),
-                              child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Tokens → ${_analysis!['tokens']?.join(', ') ?? 'Tidak ada'}',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Stemmed Text → ${_analysis!['stemmed_text'] ?? 'Tidak ada'}',
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                      'Word Analysis',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.indigo,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Card(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: _isLoading ? null : _translate,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    if (_analysis!['word_analysis'] != null)
-                                      ...(_analysis!['word_analysis'] as List)
-                                          .asMap()
-                                          .entries
-                                          .map((entry) {
-                                        final index = entry.key;
-                                        final word = entry.value;
-                                        return Padding(
-                                          padding: const EdgeInsets.only(bottom: 8),
-                                          child: Card(
-                                            color: Colors.indigo.shade50,
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(12),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    'Word ${index + 1}',
-                                                    style: const TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.indigo,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    'Original → ${word['original']}',
-                                                    style: const TextStyle(fontSize: 14),
-                                                  ),
-                                                  Text(
-                                                    'Translate Original → ${word['translate_original']}',
-                                                    style: const TextStyle(fontSize: 14),
-                                                  ),
-                                                  Text(
-                                                    'Stemmed → ${word['stemmed']?? 'Tidak ada'}',
-                                                    style: const TextStyle(fontSize: 14),
-                                                  ),
-                                                  Text(
-                                                    'Translate Stemmed → ${word['translate_stemmed']?? 'Tidak ada'}',
-                                                    style: const TextStyle(fontSize: 14),
-                                                  ),
-                                                ],
+                                    )
+                                  : const Icon(Icons.send, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Text(
+                                _isLoading ? 'Menerjemahkan...' : 'Terjemahkan',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      color: Colors.indigo,
+                    ),
+                    const SizedBox(height: 30),
+                    if (_isLoading)
+                      const Center(child: CircularProgressIndicator()),
+                    if (_translatedText.isNotEmpty && !_isLoading)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Hasil Terjemahan',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _translatedText,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (_analysis != null && !_isLoading)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Analisis',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Tokens → ${_analysis!['tokens']?.join(', ') ?? 'Tidak ada'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Stemmed Text → ${_analysis!['stemmed_text'] ?? 'Tidak ada'}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Word Analysis',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              if (_analysis!['word_analysis'] != null)
+                                ...(_analysis!['word_analysis'] as List)
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                  final index = entry.key;
+                                  final word = entry.value;
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Card(
+                                      color: Colors.indigo.shade50,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Word ${index + 1}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.indigo,
                                               ),
                                             ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if (_errorMessage != null && !_isLoading)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.red,
-                            fontWeight: FontWeight.w500,
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Original → ${word['original']}',
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                            Text(
+                                              'Translate Original → ${word['translate_original']}',
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                            Text(
+                                              'Stemmed → ${word['stemmed'] ?? 'Tidak ada'}',
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                            Text(
+                                              'Translate Stemmed → ${word['translate_stemmed'] ?? 'Tidak ada'}',
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                            ],
                           ),
                         ),
                       ),
+                    if (_errorMessage != null && !_isLoading)
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 30),
+                    const Divider(height: 40),
+                    const Text(
+                      'Kelompok MMC\nAnggota: Julius, Heru, Zani',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey,
+                      ),
                     ),
-                  const SizedBox(height: 30),
-                  const Divider(height: 40),
-                  const Text(
-                    'Kelompok MMC\nAnggota: Julius, Heru, Zani',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             ),
           ),
