@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const originalData = await fullRes.json();
 
     return NextResponse.json({
-      translation_original: originalData.result,
+      result: originalData.result,
       analysis: {
         tokens,
         word_analysis,
