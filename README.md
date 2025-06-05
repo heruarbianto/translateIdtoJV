@@ -3,6 +3,8 @@
 Website hasil dapat diakses di: **[mmcproject.web.id](https://translate.mmcproject.web.id)**
 Unduh APK di: **[Kamus Bahasa Jawa](https://github.com/heruarbianto/translateIdtoJV/blob/master/kamusIdtoJv.apk)**
 
+
+Seluruh Project-Project Kami bdapat diakses di: **[mmcproject.web.id](https://mmcproject.web.id)**
 ## API Uji Coba Backend
 
 Endpoint API:
